@@ -1,5 +1,7 @@
 use warp::Filter;
 
+mod domain;
+
 #[tokio::main]
 async fn main() {
     let hello = warp::get().map(|| format!("Hello, world!"));
