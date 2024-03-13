@@ -1,3 +1,5 @@
+use tracing::info;
+use tracing_subscriber::fmt::format::FmtSpan;
 use warp::Filter;
 
 mod domain;
@@ -7,6 +9,14 @@ mod store;
 
 #[tokio::main]
 async fn main() {
+    let log_filter =
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "askly=info,warp=error".to_owned());
+
+    tracing_subscriber::fmt()
+        .with_env_filter(log_filter)
+        .with_span_events(FmtSpan::CLOSE)
+        .init();
+
     let store = store::Store::new();
     let store = warp::any().map(move || store.clone());
 
@@ -55,7 +65,9 @@ async fn main() {
         .or(add_question)
         .or(update_question)
         .or(delete_question)
-        .recover(error::handle_rejection);
+        .recover(error::handle_rejection)
+        .with(warp::trace::request());
 
+    info!("Listening on port:3000");
     warp::serve(routes).run(([127, 0, 0, 1], 3000)).await;
 }
