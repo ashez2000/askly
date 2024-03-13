@@ -41,3 +41,29 @@ pub async fn add_question(store: Store, input: QuestionInput) -> Result<impl Rep
 
     Ok(warp::reply::json(&question))
 }
+
+pub async fn update_question(
+    id: String,
+    store: Store,
+    input: QuestionInput,
+) -> Result<impl Reply, Rejection> {
+    let mut questions = store.questions.write().unwrap();
+
+    if !questions.contains_key(&id) {
+        return Err(warp::reject::custom(Error::NotFound(format!(
+            "Question with id: {} not found",
+            &id
+        ))));
+    };
+
+    let question = Question {
+        id: id.clone(),
+        title: input.title,
+        content: input.content,
+        tags: input.tags,
+    };
+
+    questions.insert(id, question.clone());
+
+    Ok(warp::reply::json(&question))
+}

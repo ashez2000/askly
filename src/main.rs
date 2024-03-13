@@ -34,10 +34,19 @@ async fn main() {
         .and(warp::body::json())
         .and_then(routes::add_question);
 
+    let update_question = warp::put()
+        .and(warp::path("questions"))
+        .and(warp::path::param::<String>())
+        .and(warp::path::end())
+        .and(store.clone())
+        .and(warp::body::json())
+        .and_then(routes::update_question);
+
     let routes = hello
         .or(get_questions)
         .or(get_question)
         .or(add_question)
+        .or(update_question)
         .recover(error::handle_rejection);
 
     warp::serve(routes).run(([127, 0, 0, 1], 3000)).await;
