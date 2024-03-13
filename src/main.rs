@@ -20,6 +20,13 @@ async fn main() {
         .and(store.clone())
         .and_then(routes::get_questions);
 
+    let get_question = warp::get()
+        .and(warp::path("questions"))
+        .and(warp::path::param::<String>())
+        .and(warp::path::end())
+        .and(store.clone())
+        .and_then(routes::get_question);
+
     let add_question = warp::post()
         .and(warp::path("questions"))
         .and(warp::path::end())
@@ -29,6 +36,7 @@ async fn main() {
 
     let routes = hello
         .or(get_questions)
+        .or(get_question)
         .or(add_question)
         .recover(error::handle_rejection);
 
