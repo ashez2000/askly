@@ -67,3 +67,14 @@ pub async fn update_question(
 
     Ok(warp::reply::json(&question))
 }
+
+pub async fn delete_question(id: String, store: Store) -> Result<impl Reply, Rejection> {
+    match store.questions.write().unwrap().remove(&id) {
+        Some(question) => Ok(warp::reply::json(&question)),
+
+        None => Err(warp::reject::custom(Error::NotFound(format!(
+            "Question with id: {} not found",
+            &id,
+        )))),
+    }
+}
