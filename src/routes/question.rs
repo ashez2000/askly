@@ -9,7 +9,7 @@ use crate::{
 
 pub async fn get_questions(store: DbStore) -> Result<impl Reply, Rejection> {
     match store.get_questions().await {
-        Ok(quesitons) => Ok(warp::reply::json(&quesitons)),
+        Ok(questions) => Ok(warp::reply::json(&questions)),
         Err(e) => Err(warp::reject::custom(e)),
     }
 }
@@ -25,23 +25,18 @@ pub async fn get_question(id: String, store: Store) -> Result<impl Reply, Reject
     }
 }
 
-pub async fn add_question(store: Store, input: NewQuestion) -> Result<impl Reply, Rejection> {
-    let id = Uuid::new_v4().to_string();
-
+pub async fn add_question(store: DbStore, input: NewQuestion) -> Result<impl Reply, Rejection> {
     let question = Question {
-        id: id.clone(),
+        id: Uuid::new_v4(),
         title: input.title,
         content: input.content,
         tags: input.tags,
     };
 
-    store
-        .questions
-        .write()
-        .unwrap()
-        .insert(id, question.clone());
-
-    Ok(warp::reply::json(&question))
+    match store.add_question(&question).await {
+        Ok(_) => Ok(warp::reply::json(&question)),
+        Err(e) => Err(warp::reject::custom(e)),
+    }
 }
 
 pub async fn update_question(
@@ -59,7 +54,7 @@ pub async fn update_question(
     };
 
     let question = Question {
-        id: id.clone(),
+        id: Uuid::new_v4(),
         title: input.title,
         content: input.content,
         tags: input.tags,

@@ -7,11 +7,12 @@ edition = "2021"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 warp = "0.3"
 serde = { version = "1", features = ["derive"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sqlx = { version = "0.7", features = [
     "runtime-tokio",
     "tls-rustls",
     "postgres",
+    "uuid",
 ] }

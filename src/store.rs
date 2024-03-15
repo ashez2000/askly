@@ -54,4 +54,24 @@ impl DbStore {
             Err(e) => Err(Error::DbError(e)),
         }
     }
+
+    pub async fn add_question(&self, question: &Question) -> Result<(), Error> {
+        let sql = r"
+            INSERT INTO questions (id, title, content, tags)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, title, content, tags
+        ";
+
+        match sqlx::query(sql)
+            .bind(&question.id)
+            .bind(&question.title)
+            .bind(&question.content)
+            .bind(&question.tags)
+            .execute(&self.conn)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
 }
