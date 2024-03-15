@@ -2,7 +2,7 @@ use uuid::Uuid;
 use warp::{reject::Rejection, reply::Reply};
 
 use crate::{
-    domain::question::{Question, QuestionInput},
+    domain::question::{NewQuestion, Question},
     error::Error,
     store::Store,
 };
@@ -23,7 +23,7 @@ pub async fn get_question(id: String, store: Store) -> Result<impl Reply, Reject
     }
 }
 
-pub async fn add_question(store: Store, input: QuestionInput) -> Result<impl Reply, Rejection> {
+pub async fn add_question(store: Store, input: NewQuestion) -> Result<impl Reply, Rejection> {
     let id = Uuid::new_v4().to_string();
 
     let question = Question {
@@ -45,7 +45,7 @@ pub async fn add_question(store: Store, input: QuestionInput) -> Result<impl Rep
 pub async fn update_question(
     id: String,
     store: Store,
-    input: QuestionInput,
+    input: NewQuestion,
 ) -> Result<impl Reply, Rejection> {
     let mut questions = store.questions.write().unwrap();
 

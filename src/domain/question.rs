@@ -9,7 +9,7 @@ pub struct Question {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct QuestionInput {
+pub struct NewQuestion {
     pub title: String,
     pub content: String,
     pub tags: Option<Vec<String>>,
