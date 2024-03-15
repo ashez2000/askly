@@ -4,12 +4,14 @@ use warp::{reject::Rejection, reply::Reply};
 use crate::{
     domain::question::{NewQuestion, Question},
     error::Error,
-    store::Store,
+    store::{DbStore, Store},
 };
 
-pub async fn get_questions(store: Store) -> Result<impl Reply, Rejection> {
-    let questions: Vec<Question> = store.questions.read().unwrap().values().cloned().collect();
-    Ok(warp::reply::json(&questions))
+pub async fn get_questions(store: DbStore) -> Result<impl Reply, Rejection> {
+    match store.get_questions().await {
+        Ok(quesitons) => Ok(warp::reply::json(&quesitons)),
+        Err(e) => Err(warp::reject::custom(e)),
+    }
 }
 
 pub async fn get_question(id: String, store: Store) -> Result<impl Reply, Rejection> {

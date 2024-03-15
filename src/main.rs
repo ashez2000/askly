@@ -33,7 +33,7 @@ async fn main() {
     let get_questions = warp::get()
         .and(warp::path("questions"))
         .and(warp::path::end())
-        .and(store.clone())
+        .and(db_store.clone())
         .and_then(routes::get_questions);
 
     let get_question = warp::get()

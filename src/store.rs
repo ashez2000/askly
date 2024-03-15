@@ -3,9 +3,12 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{
+    postgres::{PgPoolOptions, PgRow},
+    PgPool, Row,
+};
 
-use crate::domain::question::Question;
+use crate::{domain::question::Question, error::Error};
 
 #[derive(Clone)]
 pub struct Store {
@@ -34,5 +37,21 @@ impl DbStore {
             .expect("Db connection failed");
 
         Self { conn }
+    }
+
+    pub async fn get_questions(&self) -> Result<Vec<Question>, Error> {
+        match sqlx::query("SELECT * FROM questions")
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_all(&self.conn)
+            .await
+        {
+            Ok(questions) => Ok(questions),
+            Err(e) => Err(Error::DbError(e)),
+        }
     }
 }
