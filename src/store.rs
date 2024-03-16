@@ -5,7 +5,7 @@ use sqlx::{
 use uuid::Uuid;
 
 use crate::{
-    domain::{answer::Answer, question::Question},
+    domain::{answer::Answer, question::Question, user::User},
     error::Error,
 };
 
@@ -163,6 +163,25 @@ impl DbStore {
     pub async fn delete_answer(&self, id: Uuid) -> Result<(), Error> {
         match sqlx::query("DELETE FROM answers WHERE id = $1")
             .bind(id)
+            .execute(&self.conn)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn add_user(&self, input: User) -> Result<(), Error> {
+        let sql = r"
+            INSERT INTO users (id, name, email, password)
+            VALUES ($1, $2, $3, $4)
+        ";
+
+        match sqlx::query(sql)
+            .bind(&input.id)
+            .bind(&input.name)
+            .bind(&input.email)
+            .bind(&input.password)
             .execute(&self.conn)
             .await
         {

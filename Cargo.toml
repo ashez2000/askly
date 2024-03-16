@@ -16,3 +16,5 @@ sqlx = { version = "0.7", features = [
     "postgres",
     "uuid",
 ] }
+rand = "0.8"
+rust-argon2 = "1.0"
