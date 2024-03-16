@@ -92,4 +92,30 @@ impl DbStore {
             Err(e) => Err(Error::DbError(e)),
         }
     }
+
+    pub async fn update_quesiton(&self, question: Question) -> Result<Question, Error> {
+        let sql = r"
+            UPDATE questions SET title = $1, content = $2, tags = $3
+            WHERE id = $4
+            RETURNING id, title, content, tags
+        ";
+
+        match sqlx::query(sql)
+            .bind(question.title)
+            .bind(question.content)
+            .bind(question.tags)
+            .bind(question.id)
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.conn)
+            .await
+        {
+            Ok(question) => Ok(question),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
 }

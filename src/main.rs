@@ -53,9 +53,9 @@ async fn main() {
 
     let update_question = warp::put()
         .and(warp::path("questions"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
-        .and(store.clone())
+        .and(db_store.clone())
         .and(warp::body::json())
         .and_then(routes::update_question);
 

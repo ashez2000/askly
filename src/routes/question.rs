@@ -36,29 +36,21 @@ pub async fn add_question(store: DbStore, input: NewQuestion) -> Result<impl Rep
 }
 
 pub async fn update_question(
-    id: String,
-    store: Store,
+    id: Uuid,
+    store: DbStore,
     input: NewQuestion,
 ) -> Result<impl Reply, Rejection> {
-    let mut questions = store.questions.write().unwrap();
-
-    if !questions.contains_key(&id) {
-        return Err(warp::reject::custom(Error::NotFound(format!(
-            "Question with id: {} not found",
-            &id
-        ))));
-    };
-
     let question = Question {
-        id: Uuid::new_v4(),
+        id,
         title: input.title,
         content: input.content,
         tags: input.tags,
     };
 
-    questions.insert(id, question.clone());
-
-    Ok(warp::reply::json(&question))
+    match store.update_quesiton(question).await {
+        Ok(question) => Ok(warp::reply::json(&question)),
+        Err(e) => Err(warp::reject::custom(e)),
+    }
 }
 
 pub async fn delete_question(id: String, store: Store) -> Result<impl Reply, Rejection> {
