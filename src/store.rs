@@ -5,7 +5,11 @@ use sqlx::{
 use uuid::Uuid;
 
 use crate::{
-    domain::{answer::Answer, question::Question, user::User},
+    domain::{
+        answer::Answer,
+        question::Question,
+        user::{Credential, User},
+    },
     error::Error,
 };
 
@@ -189,4 +193,36 @@ impl DbStore {
             Err(e) => Err(Error::DbError(e)),
         }
     }
+
+    pub async fn find_user_by_credential(&self, credential: Credential) -> Result<(), Error> {
+        let sql = r"SELECT * FROM users WHERE email = $1";
+
+        let user = sqlx::query(sql)
+            .bind(credential.email)
+            .map(|row: PgRow| User {
+                id: row.get("id"),
+                name: row.get("name"),
+                email: row.get("email"),
+                password: row.get("password"),
+            })
+            .fetch_one(&self.conn)
+            .await
+            .map_err(|_| Error::InvalidEmailPassword)?;
+
+        match verify_password(&user.password, credential.password.as_bytes()) {
+            Ok(verified) => {
+                if verified {
+                    Ok(())
+                } else {
+                    Err(Error::InvalidEmailPassword)
+                }
+            }
+
+            Err(_) => Err(Error::ServerError),
+        }
+    }
+}
+
+fn verify_password(hash: &str, password: &[u8]) -> Result<bool, argon2::Error> {
+    argon2::verify_encoded(hash, password)
 }

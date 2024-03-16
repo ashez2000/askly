@@ -90,6 +90,13 @@ async fn main() {
         .and(warp::body::json())
         .and_then(routes::signup);
 
+    let signin = warp::post()
+        .and(warp::path("signin"))
+        .and(warp::path::end())
+        .and(db_store.clone())
+        .and(warp::body::json())
+        .and_then(routes::signin);
+
     let routes = hello
         .or(get_questions)
         .or(get_question)
@@ -100,6 +107,7 @@ async fn main() {
         .or(add_answer)
         .or(delete_answer)
         .or(signup)
+        .or(signin)
         .recover(error::handle_rejection)
         .with(warp::trace::request());
 

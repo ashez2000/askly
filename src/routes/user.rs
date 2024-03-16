@@ -3,7 +3,7 @@ use uuid::Uuid;
 use warp::{reject::Rejection, reply::Reply};
 
 use crate::{
-    domain::user::{NewUser, User},
+    domain::user::{Credential, NewUser, User},
     store::DbStore,
 };
 
@@ -24,6 +24,13 @@ pub async fn signup(store: DbStore, input: NewUser) -> Result<impl Reply, Reject
     };
 
     match store.add_user(user).await {
+        Ok(_) => Ok(warp::reply::json(&true)),
+        Err(e) => Err(warp::reject::custom(e)),
+    }
+}
+
+pub async fn signin(store: DbStore, input: Credential) -> Result<impl Reply, Rejection> {
+    match store.find_user_by_credential(input).await {
         Ok(_) => Ok(warp::reply::json(&true)),
         Err(e) => Err(warp::reject::custom(e)),
     }

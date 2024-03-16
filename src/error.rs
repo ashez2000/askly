@@ -8,17 +8,18 @@ use warp::{
 
 #[derive(Debug)]
 pub enum Error {
-    NotFound(String),
     DbError(sqlx::Error),
+    InvalidEmailPassword,
+    ServerError,
 }
 
 impl Reject for Error {}
 
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
-    if let Some(Error::NotFound(s)) = err.find() {
+    if let Some(Error::InvalidEmailPassword) = err.find() {
         return Ok(warp::reply::with_status(
-            s.to_string(),
-            StatusCode::NOT_FOUND,
+            "Invalid email or password".to_string(),
+            StatusCode::UNAUTHORIZED,
         ));
     }
 
@@ -26,6 +27,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         // TODO: handle Db errors
         eprintln!("{}", e);
 
+        return Ok(warp::reply::with_status(
+            "Internal Server Error".to_string(),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ));
+    }
+
+    if let Some(Error::ServerError) = err.find() {
         return Ok(warp::reply::with_status(
             "Internal Server Error".to_string(),
             StatusCode::INTERNAL_SERVER_ERROR,
