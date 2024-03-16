@@ -1,5 +1,6 @@
 use tracing::info;
 use tracing_subscriber::fmt::format::FmtSpan;
+use uuid::Uuid;
 use warp::Filter;
 
 mod domain;
@@ -38,9 +39,9 @@ async fn main() {
 
     let get_question = warp::get()
         .and(warp::path("questions"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
-        .and(store.clone())
+        .and(db_store.clone())
         .and_then(routes::get_question);
 
     let add_question = warp::post()

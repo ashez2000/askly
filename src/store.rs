@@ -7,6 +7,7 @@ use sqlx::{
     postgres::{PgPoolOptions, PgRow},
     PgPool, Row,
 };
+use uuid::Uuid;
 
 use crate::{domain::question::Question, error::Error};
 
@@ -51,6 +52,23 @@ impl DbStore {
             .await
         {
             Ok(questions) => Ok(questions),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn get_question(&self, id: Uuid) -> Result<Question, Error> {
+        match sqlx::query("SELECT * FROM questions WHERE id = $1")
+            .bind(id)
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.conn)
+            .await
+        {
+            Ok(question) => Ok(question),
             Err(e) => Err(Error::DbError(e)),
         }
     }
