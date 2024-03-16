@@ -33,7 +33,7 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
     }
 
     Ok(warp::reply::with_status(
-        "Internal Server Error".to_string(),
-        StatusCode::INTERNAL_SERVER_ERROR,
+        "Route not found".to_string(),
+        StatusCode::NOT_FOUND,
     ))
 }

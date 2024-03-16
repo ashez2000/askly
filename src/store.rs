@@ -1,8 +1,3 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
-
 use sqlx::{
     postgres::{PgPoolOptions, PgRow},
     PgPool, Row,
@@ -11,18 +6,18 @@ use uuid::Uuid;
 
 use crate::{domain::question::Question, error::Error};
 
-#[derive(Clone)]
-pub struct Store {
-    pub questions: Arc<RwLock<HashMap<String, Question>>>,
-}
+// #[derive(Clone)]
+// pub struct Store {
+// pub questions: Arc<RwLock<HashMap<String, Question>>>,
+// }
 
-impl Store {
-    pub fn new() -> Self {
-        Self {
-            questions: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
-}
+// impl Store {
+// pub fn new() -> Self {
+// Self {
+// questions: Arc::new(RwLock::new(HashMap::new())),
+// }
+// }
+// }
 
 #[derive(Debug, Clone)]
 pub struct DbStore {
@@ -115,6 +110,17 @@ impl DbStore {
             .await
         {
             Ok(question) => Ok(question),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn delete_question(&self, id: Uuid) -> Result<(), Error> {
+        match sqlx::query("DELETE FROM questions WHERE id = $1")
+            .bind(id)
+            .execute(&self.conn)
+            .await
+        {
+            Ok(_) => Ok(()),
             Err(e) => Err(Error::DbError(e)),
         }
     }

@@ -19,8 +19,8 @@ async fn main() {
         .init();
 
     // In-memory store
-    let store = store::Store::new();
-    let store = warp::any().map(move || store.clone());
+    // let store = store::Store::new();
+    // let store = warp::any().map(move || store.clone());
 
     // Database store
     let db_url = "postgresql://postgres:password@localhost:5432/askly";
@@ -61,9 +61,9 @@ async fn main() {
 
     let delete_question = warp::delete()
         .and(warp::path("questions"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
-        .and(store.clone())
+        .and(db_store.clone())
         .and_then(routes::delete_question);
 
     let routes = hello

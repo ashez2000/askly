@@ -3,8 +3,7 @@ use warp::{reject::Rejection, reply::Reply};
 
 use crate::{
     domain::question::{NewQuestion, Question},
-    error::Error,
-    store::{DbStore, Store},
+    store::DbStore,
 };
 
 pub async fn get_questions(store: DbStore) -> Result<impl Reply, Rejection> {
@@ -53,13 +52,9 @@ pub async fn update_question(
     }
 }
 
-pub async fn delete_question(id: String, store: Store) -> Result<impl Reply, Rejection> {
-    match store.questions.write().unwrap().remove(&id) {
-        Some(question) => Ok(warp::reply::json(&question)),
-
-        None => Err(warp::reject::custom(Error::NotFound(format!(
-            "Question with id: {} not found",
-            &id,
-        )))),
+pub async fn delete_question(id: Uuid, store: DbStore) -> Result<impl Reply, Rejection> {
+    match store.delete_question(id).await {
+        Ok(_) => Ok(warp::reply::json(&true)),
+        Err(e) => Err(warp::reject::custom(e)),
     }
 }
