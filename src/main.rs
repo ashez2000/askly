@@ -18,11 +18,6 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
-    // In-memory store
-    // let store = store::Store::new();
-    // let store = warp::any().map(move || store.clone());
-
-    // Database store
     let db_url = "postgresql://postgres:password@localhost:5432/askly";
     let db_store = store::DbStore::new(db_url).await;
     let db_store = warp::any().map(move || db_store.clone());
