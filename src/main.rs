@@ -61,12 +61,37 @@ async fn main() {
         .and(db_store.clone())
         .and_then(routes::delete_question);
 
+    let get_answers = warp::get()
+        .and(warp::path("questions"))
+        .and(warp::path::param::<Uuid>())
+        .and(warp::path("answers"))
+        .and(db_store.clone())
+        .and_then(routes::get_answers);
+
+    let add_answer = warp::post()
+        .and(warp::path("questions"))
+        .and(warp::path::param::<Uuid>())
+        .and(warp::path("answers"))
+        .and(db_store.clone())
+        .and(warp::body::json())
+        .and_then(routes::add_answer);
+
+    let delete_answer = warp::delete()
+        .and(warp::path("answers"))
+        .and(warp::path::param::<Uuid>())
+        .and(warp::path::end())
+        .and(db_store.clone())
+        .and_then(routes::delete_answer);
+
     let routes = hello
         .or(get_questions)
         .or(get_question)
         .or(add_question)
         .or(update_question)
         .or(delete_question)
+        .or(get_answers)
+        .or(add_answer)
+        .or(delete_answer)
         .recover(error::handle_rejection)
         .with(warp::trace::request());
 

@@ -4,7 +4,10 @@ use sqlx::{
 };
 use uuid::Uuid;
 
-use crate::{domain::question::Question, error::Error};
+use crate::{
+    domain::{answer::Answer, question::Question},
+    error::Error,
+};
 
 #[derive(Debug, Clone)]
 pub struct DbStore {
@@ -103,6 +106,62 @@ impl DbStore {
 
     pub async fn delete_question(&self, id: Uuid) -> Result<(), Error> {
         match sqlx::query("DELETE FROM questions WHERE id = $1")
+            .bind(id)
+            .execute(&self.conn)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn get_answers(&self, question_id: Uuid) -> Result<Vec<Answer>, Error> {
+        let sql = r"
+            SELECT * FROM answers
+            WHERE question_id = $1
+        ";
+
+        match sqlx::query(sql)
+            .bind(question_id)
+            .map(|row: PgRow| Answer {
+                id: row.get("id"),
+                content: row.get("content"),
+                question_id: row.get("question_id"),
+            })
+            .fetch_all(&self.conn)
+            .await
+        {
+            Ok(answers) => Ok(answers),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn add_answer(&self, input: Answer) -> Result<Answer, Error> {
+        let sql = r"
+            INSERT INTO answers (id, content, question_id)
+            VALUES ($1, $2, $3)
+            RETURNING id, content, question_id 
+        ";
+
+        match sqlx::query(sql)
+            .bind(input.id)
+            .bind(input.content)
+            .bind(input.question_id)
+            .map(|row: PgRow| Answer {
+                id: row.get("id"),
+                content: row.get("content"),
+                question_id: row.get("question_id"),
+            })
+            .fetch_one(&self.conn)
+            .await
+        {
+            Ok(answer) => Ok(answer),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn delete_answer(&self, id: Uuid) -> Result<(), Error> {
+        match sqlx::query("DELETE FROM answers WHERE id = $1")
             .bind(id)
             .execute(&self.conn)
             .await
