@@ -18,3 +18,5 @@ sqlx = { version = "0.7", features = [
 ] }
 rand = "0.8"
 rust-argon2 = "1.0"
+chrono = "0.4.19"
+jsonwebtoken = "9"

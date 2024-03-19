@@ -21,3 +21,9 @@ pub struct Credential {
     pub email: String,
     pub password: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthPayload {
+    pub user_id: Uuid,
+    pub exp: usize,
+}

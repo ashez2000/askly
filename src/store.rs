@@ -194,7 +194,7 @@ impl DbStore {
         }
     }
 
-    pub async fn find_user_by_credential(&self, credential: Credential) -> Result<(), Error> {
+    pub async fn find_user_by_credential(&self, credential: Credential) -> Result<User, Error> {
         let sql = r"SELECT * FROM users WHERE email = $1";
 
         let user = sqlx::query(sql)
@@ -212,7 +212,7 @@ impl DbStore {
         match verify_password(&user.password, credential.password.as_bytes()) {
             Ok(verified) => {
                 if verified {
-                    Ok(())
+                    Ok(user)
                 } else {
                     Err(Error::InvalidEmailPassword)
                 }

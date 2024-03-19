@@ -11,6 +11,7 @@ pub enum Error {
     DbError(sqlx::Error),
     InvalidEmailPassword,
     ServerError,
+    JwtError,
 }
 
 impl Reject for Error {}
@@ -37,6 +38,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         return Ok(warp::reply::with_status(
             "Internal Server Error".to_string(),
             StatusCode::INTERNAL_SERVER_ERROR,
+        ));
+    }
+
+    if let Some(Error::JwtError) = err.find() {
+        return Ok(warp::reply::with_status(
+            "Unauthorized".to_string(),
+            StatusCode::UNAUTHORIZED,
         ));
     }
 
