@@ -1,8 +1,10 @@
+use std::future;
+
 use chrono::{prelude::*, Days};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use rand::Rng;
 use uuid::Uuid;
-use warp::{reject::Rejection, reply::Reply};
+use warp::{reject::Rejection, reply::Reply, Filter};
 
 use crate::{
     domain::user::{AuthPayload, Credential, NewUser, User},
@@ -58,4 +60,26 @@ fn sign_token(user_id: Uuid) -> Result<String, Error> {
         &EncodingKey::from_secret("secret".as_ref()),
     )
     .map_err(|_| Error::JwtError)
+}
+
+fn verify_token(token: String) -> Result<AuthPayload, Error> {
+    let payload = decode::<AuthPayload>(
+        &token,
+        &DecodingKey::from_secret("secret".as_ref()),
+        &Validation::default(),
+    )
+    .map_err(|_| Error::JwtError)?;
+
+    Ok(payload.claims)
+}
+
+pub fn protect() -> impl Filter<Extract = (AuthPayload,), Error = warp::Rejection> + Clone {
+    warp::header::<String>("Authorization").and_then(|token: String| {
+        let payload = match verify_token(token) {
+            Ok(t) => t,
+            Err(e) => return future::ready(Err(warp::reject::custom(e))),
+        };
+
+        future::ready(Ok(payload))
+    })
 }

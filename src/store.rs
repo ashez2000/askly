@@ -62,10 +62,10 @@ impl DbStore {
         }
     }
 
-    pub async fn add_question(&self, question: &Question) -> Result<(), Error> {
+    pub async fn add_question(&self, question: &Question, user_id: Uuid) -> Result<(), Error> {
         let sql = r"
-            INSERT INTO questions (id, title, content, tags)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO questions (id, title, content, tags, user_id)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING id, title, content, tags
         ";
 
@@ -74,6 +74,7 @@ impl DbStore {
             .bind(&question.title)
             .bind(&question.content)
             .bind(&question.tags)
+            .bind(&user_id)
             .execute(&self.conn)
             .await
         {

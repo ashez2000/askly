@@ -42,6 +42,7 @@ async fn main() {
     let add_question = warp::post()
         .and(warp::path("questions"))
         .and(warp::path::end())
+        .and(routes::protect())
         .and(db_store.clone())
         .and(warp::body::json())
         .and_then(routes::add_question);

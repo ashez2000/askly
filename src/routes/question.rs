@@ -2,7 +2,10 @@ use uuid::Uuid;
 use warp::{reject::Rejection, reply::Reply};
 
 use crate::{
-    domain::question::{NewQuestion, Question},
+    domain::{
+        question::{NewQuestion, Question},
+        user::AuthPayload,
+    },
     store::DbStore,
 };
 
@@ -20,7 +23,11 @@ pub async fn get_question(id: Uuid, store: DbStore) -> Result<impl Reply, Reject
     }
 }
 
-pub async fn add_question(store: DbStore, input: NewQuestion) -> Result<impl Reply, Rejection> {
+pub async fn add_question(
+    auth: AuthPayload,
+    store: DbStore,
+    input: NewQuestion,
+) -> Result<impl Reply, Rejection> {
     let question = Question {
         id: Uuid::new_v4(),
         title: input.title,
@@ -28,7 +35,7 @@ pub async fn add_question(store: DbStore, input: NewQuestion) -> Result<impl Rep
         tags: input.tags,
     };
 
-    match store.add_question(&question).await {
+    match store.add_question(&question, auth.user_id).await {
         Ok(_) => Ok(warp::reply::json(&question)),
         Err(e) => Err(warp::reject::custom(e)),
     }
