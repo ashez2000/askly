@@ -153,10 +153,10 @@ impl DbStore {
         }
     }
 
-    pub async fn add_answer(&self, input: Answer) -> Result<Answer, Error> {
+    pub async fn add_answer(&self, input: Answer, user_id: Uuid) -> Result<Answer, Error> {
         let sql = r"
-            INSERT INTO answers (id, content, question_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO answers (id, content, question_id, user_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING id, content, question_id 
         ";
 
@@ -164,6 +164,7 @@ impl DbStore {
             .bind(input.id)
             .bind(input.content)
             .bind(input.question_id)
+            .bind(user_id)
             .map(|row: PgRow| Answer {
                 id: row.get("id"),
                 content: row.get("content"),
@@ -184,6 +185,18 @@ impl DbStore {
             .await
         {
             Ok(_) => Ok(()),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
+    pub async fn is_answer_owner(&self, answer_id: Uuid, user_id: Uuid) -> Result<bool, Error> {
+        match sqlx::query("SELECT * from answers where id = $1 and user_id = $2")
+            .bind(answer_id)
+            .bind(user_id)
+            .fetch_optional(&self.conn)
+            .await
+        {
+            Ok(answer) => Ok(answer.is_some()),
             Err(e) => Err(Error::DbError(e)),
         }
     }

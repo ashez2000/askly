@@ -75,6 +75,7 @@ async fn main() {
         .and(warp::path("questions"))
         .and(warp::path::param::<Uuid>())
         .and(warp::path("answers"))
+        .and(routes::protect())
         .and(db_store.clone())
         .and(warp::body::json())
         .and_then(routes::add_answer);
@@ -83,6 +84,7 @@ async fn main() {
         .and(warp::path("answers"))
         .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
+        .and(routes::protect())
         .and(db_store.clone())
         .and_then(routes::delete_answer);
 
