@@ -1,3 +1,5 @@
+use std::env;
+
 use tracing::info;
 use tracing_subscriber::fmt::format::FmtSpan;
 use uuid::Uuid;
@@ -10,6 +12,20 @@ mod store;
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
+
+    if let Err(_) = env::var("JWT_SECRET") {
+        panic!("JWT_SECRET is not set");
+    }
+
+    if let Err(_) = env::var("DATABASE_URL") {
+        panic!("DATABASE_URL is not set");
+    }
+
+    if let Err(_) = env::var("PORT") {
+        panic!("PORT is not set");
+    }
+
     let log_filter =
         std::env::var("RUST_LOG").unwrap_or_else(|_| "askly=info,warp=error".to_owned());
 
@@ -18,8 +34,8 @@ async fn main() {
         .with_span_events(FmtSpan::CLOSE)
         .init();
 
-    let db_url = "postgresql://postgres:password@localhost:5432/askly";
-    let db_store = store::DbStore::new(db_url).await;
+    let db_url = env::var("DATABASE_URL").unwrap();
+    let db_store = store::DbStore::new(&db_url).await;
     let db_store = warp::any().map(move || db_store.clone());
 
     let hello = warp::get()
@@ -116,6 +132,8 @@ async fn main() {
         .recover(error::handle_rejection)
         .with(warp::trace::request());
 
-    info!("Listening on port:3000");
+    let port = env::var("PORT").unwrap().parse::<u16>().unwrap_or(3000);
+
+    info!("Listening on port:{}", port);
     warp::serve(routes).run(([127, 0, 0, 1], 3000)).await;
 }
