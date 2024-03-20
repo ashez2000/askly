@@ -120,6 +120,18 @@ impl DbStore {
         }
     }
 
+    pub async fn is_question_owner(&self, question_id: Uuid, user_id: Uuid) -> Result<bool, Error> {
+        match sqlx::query("SELECT * from questions where id = $1 and user_id = $2")
+            .bind(question_id)
+            .bind(user_id)
+            .fetch_optional(&self.conn)
+            .await
+        {
+            Ok(question) => Ok(question.is_some()),
+            Err(e) => Err(Error::DbError(e)),
+        }
+    }
+
     pub async fn get_answers(&self, question_id: Uuid) -> Result<Vec<Answer>, Error> {
         let sql = r"
             SELECT * FROM answers

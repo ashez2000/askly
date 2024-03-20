@@ -6,6 +6,7 @@ use crate::{
         question::{NewQuestion, Question},
         user::AuthPayload,
     },
+    error::Error,
     store::DbStore,
 };
 
@@ -43,9 +44,14 @@ pub async fn add_question(
 
 pub async fn update_question(
     id: Uuid,
+    auth: AuthPayload,
     store: DbStore,
     input: NewQuestion,
 ) -> Result<impl Reply, Rejection> {
+    if !store.is_question_owner(id, auth.user_id).await? {
+        return Err(warp::reject::custom(Error::NotOwner));
+    }
+
     let question = Question {
         id,
         title: input.title,
@@ -59,7 +65,15 @@ pub async fn update_question(
     }
 }
 
-pub async fn delete_question(id: Uuid, store: DbStore) -> Result<impl Reply, Rejection> {
+pub async fn delete_question(
+    id: Uuid,
+    auth: AuthPayload,
+    store: DbStore,
+) -> Result<impl Reply, Rejection> {
+    if !store.is_question_owner(id, auth.user_id).await? {
+        return Err(warp::reject::custom(Error::NotOwner));
+    }
+
     match store.delete_question(id).await {
         Ok(_) => Ok(warp::reply::json(&true)),
         Err(e) => Err(warp::reject::custom(e)),

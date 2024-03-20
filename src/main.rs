@@ -51,6 +51,7 @@ async fn main() {
         .and(warp::path("questions"))
         .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
+        .and(routes::protect())
         .and(db_store.clone())
         .and(warp::body::json())
         .and_then(routes::update_question);
@@ -59,6 +60,7 @@ async fn main() {
         .and(warp::path("questions"))
         .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
+        .and(routes::protect())
         .and(db_store.clone())
         .and_then(routes::delete_question);
 

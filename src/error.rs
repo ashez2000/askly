@@ -12,6 +12,7 @@ pub enum Error {
     InvalidEmailPassword,
     ServerError,
     JwtError,
+    NotOwner,
 }
 
 impl Reject for Error {}
@@ -45,6 +46,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
         return Ok(warp::reply::with_status(
             "Unauthorized".to_string(),
             StatusCode::UNAUTHORIZED,
+        ));
+    }
+
+    if let Some(Error::NotOwner) = err.find() {
+        return Ok(warp::reply::with_status(
+            "Unauthorized".to_string(),
+            StatusCode::FORBIDDEN,
         ));
     }
 
