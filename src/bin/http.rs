@@ -20,7 +20,7 @@ async fn main() {
     }
 
     let log_filter =
-        std::env::var("RUST_LOG").unwrap_or_else(|_| "askly=info,warp=error".to_owned());
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "http=info,warp=error".to_owned());
 
     tracing_subscriber::fmt()
         .with_env_filter(log_filter)
@@ -30,11 +30,12 @@ async fn main() {
     let db_url = env::var("DATABASE_URL").unwrap();
     let store = askly::store::DbStore::new(&db_url).await;
 
-    let port = env::var("PORT").unwrap().parse::<u16>().unwrap_or(3000);
+    sqlx::migrate!().run(&store.clone().conn).await.unwrap();
 
-    info!("Listening on port:{}", port);
+    let port = env::var("PORT").unwrap().parse::<u16>().unwrap_or(3000);
 
     let app = askly::build_routes(store).await;
 
+    info!("Listening on port:{}", port);
     warp::serve(app).run(([0, 0, 0, 0], port)).await;
 }

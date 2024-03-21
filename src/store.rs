@@ -15,7 +15,7 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct DbStore {
-    conn: PgPool,
+    pub conn: PgPool,
 }
 
 impl DbStore {
