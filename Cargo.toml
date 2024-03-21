@@ -3,9 +3,17 @@ name = "askly"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "http"
+path = "src/bin/http.rs"
+
+[[bin]]
+name = "askly"
+path = "src/bin/shuttle.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
-warp = "0.3"
+warp = "0.3.6"
 serde = { version = "1", features = ["derive"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 tracing = { version = "0.1", features = ["log"] }
@@ -21,3 +29,6 @@ rust-argon2 = "1.0"
 chrono = "0.4.19"
 jsonwebtoken = "9"
 dotenv = "0.15.0"
+shuttle-runtime = "0.42.0"
+shuttle-warp = "0.42.0"
+shuttle-shared-db = { version = "0.42.0", features = ["postgres"] }

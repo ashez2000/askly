@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use warp::{Filter, Reply};
+use warp::{filters::BoxedFilter, Filter, Reply};
 
 pub mod domain;
 pub mod error;
@@ -8,7 +8,7 @@ pub mod store;
 
 use store::DbStore;
 
-pub async fn build_routes(store: DbStore) -> impl Filter<Extract = impl Reply> + Clone {
+pub async fn build_routes(store: DbStore) -> BoxedFilter<(impl Reply,)> {
     let db_store = warp::any().map(move || store.clone());
 
     let hello = warp::get()
@@ -104,4 +104,5 @@ pub async fn build_routes(store: DbStore) -> impl Filter<Extract = impl Reply> +
         .or(signin)
         .recover(error::handle_rejection)
         .with(warp::trace::request())
+        .boxed()
 }
