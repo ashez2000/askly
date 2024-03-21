@@ -1,42 +1,15 @@
-use std::env;
-
-use tracing::info;
-use tracing_subscriber::fmt::format::FmtSpan;
 use uuid::Uuid;
-use warp::Filter;
+use warp::{Filter, Reply};
 
-mod domain;
-mod error;
-mod routes;
-mod store;
+pub mod domain;
+pub mod error;
+pub mod routes;
+pub mod store;
 
-#[tokio::main]
-async fn main() {
-    dotenv::dotenv().ok();
+use store::DbStore;
 
-    if let Err(_) = env::var("JWT_SECRET") {
-        panic!("JWT_SECRET is not set");
-    }
-
-    if let Err(_) = env::var("DATABASE_URL") {
-        panic!("DATABASE_URL is not set");
-    }
-
-    if let Err(_) = env::var("PORT") {
-        panic!("PORT is not set");
-    }
-
-    let log_filter =
-        std::env::var("RUST_LOG").unwrap_or_else(|_| "askly=info,warp=error".to_owned());
-
-    tracing_subscriber::fmt()
-        .with_env_filter(log_filter)
-        .with_span_events(FmtSpan::CLOSE)
-        .init();
-
-    let db_url = env::var("DATABASE_URL").unwrap();
-    let db_store = store::DbStore::new(&db_url).await;
-    let db_store = warp::any().map(move || db_store.clone());
+pub async fn build_routes(store: DbStore) -> impl Filter<Extract = impl Reply> + Clone {
+    let db_store = warp::any().map(move || store.clone());
 
     let hello = warp::get()
         .and(warp::path::end())
@@ -118,7 +91,7 @@ async fn main() {
         .and(warp::body::json())
         .and_then(routes::signin);
 
-    let routes = hello
+    hello
         .or(get_questions)
         .or(get_question)
         .or(add_question)
@@ -130,10 +103,5 @@ async fn main() {
         .or(signup)
         .or(signin)
         .recover(error::handle_rejection)
-        .with(warp::trace::request());
-
-    let port = env::var("PORT").unwrap().parse::<u16>().unwrap_or(3000);
-
-    info!("Listening on port:{}", port);
-    warp::serve(routes).run(([127, 0, 0, 1], 3000)).await;
+        .with(warp::trace::request())
 }
