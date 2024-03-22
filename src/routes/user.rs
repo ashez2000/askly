@@ -1,3 +1,4 @@
+use std::env;
 use std::future;
 
 use chrono::{prelude::*, Days};
@@ -57,7 +58,7 @@ fn sign_token(user_id: Uuid) -> Result<String, Error> {
     encode(
         &Header::default(),
         &payload,
-        &EncodingKey::from_secret("secret".as_ref()),
+        &EncodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
     )
     .map_err(|_| Error::JwtError)
 }
@@ -65,7 +66,7 @@ fn sign_token(user_id: Uuid) -> Result<String, Error> {
 fn verify_token(token: String) -> Result<AuthPayload, Error> {
     let payload = decode::<AuthPayload>(
         &token,
-        &DecodingKey::from_secret("secret".as_ref()),
+        &DecodingKey::from_secret(env::var("JWT_SECRET").unwrap().as_ref()),
         &Validation::default(),
     )
     .map_err(|_| Error::JwtError)?;
